@@ -131,41 +131,41 @@ int host_blocked(struct nfq_q_handle *qh,  struct nfq_data *tb, u_int32_t id)
 	uint8_t *body;
 	uint8_t *host;
 	struct libnet_ipv4_hdr *iph;
-    struct libnet_tcp_hdr *tcph;
-    int ip_len;
-    int tcp_len;
-    int idx = 0;
+	struct libnet_tcp_hdr *tcph;
+	int ip_len;
+	int tcp_len;
+	int idx = 0;
 
-    const char* http_method[6] = {"GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS"};
-    const char* str_host = "Host: ";
+	const char* http_method[6] = {"GET", "POST", "HEAD", "PUT", "DELETE", "OPTIONS"};
+	const char* str_host = "Host: ";
 
-    int res = nfq_get_payload(tb, &data);
-    if(res < 0) {perror("nfq_get_payload: "); return -1;}
+	int res = nfq_get_payload(tb, &data);
+	if(res < 0) {perror("nfq_get_payload: "); return -1;}
 
-    iph = (struct libnet_ipv4_hdr *)data;
+	iph = (struct libnet_ipv4_hdr *)data;
 
-    if(iph->ip_p != IPPROTO_TCP) return 0;
-    ip_len = iph->ip_hl*4;
-    tcph = (struct libnet_tcp_hdr *)(data + ip_len);
+	if(iph->ip_p != IPPROTO_TCP) return 0;
+	ip_len = iph->ip_hl*4;
+	tcph = (struct libnet_tcp_hdr *)(data + ip_len);
 
-    if(tcph != NULL)
-    {
-    	tcp_len = tcph->th_off*4;
-    	body = (uint8_t *)(data + ip_len + tcp_len); // get data body 
-    	for(int i = 0; i < 6; i++)
-    	{
-    		if(strncmp((const char*)body,http_method[i],strlen(http_method[i])) == 0)
-    		{
-    			if(idx = kmp((char *)body, str_host))
-    			{
-    				idx = idx + HOST_STR_LEN; // move idx to host, "Host: " length == 6 
-    				host = (uint8_t *)(body + idx);
-    				if(strncmp((char*)host,bad_host,strlen(bad_host)) == 0)
-    					{printf("[Drop Bad Host]: %s\n", bad_host ); return 1; }
-    			}
-    		}
-    	}
-    }
+	if(tcph != NULL)
+	{
+		tcp_len = tcph->th_off*4;
+		body = (uint8_t *)(data + ip_len + tcp_len); // get data body 
+		for(int i = 0; i < 6; i++)
+		{
+			if(strncmp((const char*)body,http_method[i],strlen(http_method[i])) == 0)
+			{
+				if(idx = kmp((char *)body, str_host))
+				{
+					idx = idx + HOST_STR_LEN; // move idx to host, "Host: " length == 6 
+					host = (uint8_t *)(body + idx);
+					if(strncmp((char*)host,bad_host,strlen(bad_host)) == 0)
+						{printf("[Drop Bad Host]: %s\n", bad_host ); return 1; }
+				}
+			}
+		}
+	}
 	
 	return 0;
 }	
