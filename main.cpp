@@ -175,7 +175,7 @@ static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
 {
 	u_int32_t id = print_pkt(nfa);
 	printf("entering callback\n");
-	
+
 	if(host_blocked(qh,nfa,id) == 1)
 		return nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
 	else
